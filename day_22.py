@@ -29,7 +29,7 @@ def score(deck):
 winning_deck = max(cards, key=lambda deck: len(deck))
 print(score(winning_deck))
 
-def play(cards, depth, max_score_delta):
+def play(cards, depth, max_depth):
     rounds = 0
     has_seen = set()
     while len(cards[0]) and len(cards[1]):
@@ -37,23 +37,24 @@ def play(cards, depth, max_score_delta):
         if cards in has_seen:
             return 0, None
         has_seen.add(cards)
-        if depth > 0 and abs(score(cards[0]) - score(cards[1])) > max_score_delta:
-            break
 
         round_cards = cards[0][0], cards[1][0]
         if len(cards[0]) >= round_cards[0]+1 and len(cards[1]) >= round_cards[1]+1:
             cards_0 = cards[0][1:round_cards[0]+1]
             cards_1 = cards[1][1:round_cards[1]+1]
-            winner, _ = play((cards_0, cards_1), depth+1, max_score_delta)
+            if depth < max_depth:
+                winner, _ = play((cards_0, cards_1), depth+1, max_depth)
+            else:
+                winner = int(score(cards[1]) > score(cards[0]))
         else:
             winner = int(round_cards[1] > round_cards[0])
         new_cards = (round_cards[winner], round_cards[1-winner])
         cards = (cards[0][1:] + (new_cards if winner == 0 else tuple()),
                  cards[1][1:] + (new_cards if winner == 1 else tuple()))
 
-    winner = int(score(cards[1]) > score(cards[0]))
+    winner = int(len(cards[1]) > len(cards[0]))
     return winner, score(cards[winner])
 
 
-for max_score_delta in range(0, 100000, 1000):
-    print('max score delta', max_score_delta, 'winner:', play(original_cards, 0, max_score_delta))
+for max_depth in range(10):
+    print('max depth', max_depth, 'winner:', play(original_cards, 0, max_depth))
